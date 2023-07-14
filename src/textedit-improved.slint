@@ -11,7 +11,12 @@ export struct HighlightToken {
 }
 
 export component TextEditImproved {
-    callback edited(string /* text */);
+    callback edited(string, length, length);
+    callback undo();
+    callback redo();
+
+    out property <length> cx: 0;
+    out property <length> cy: 0;
 
     in property <TextWrap> wrap <=> i-text-input.wrap;
     in property <TextHorizontalAlignment> horizontal-alignment <=> i-text-input.horizontal-alignment;
@@ -54,8 +59,10 @@ export component TextEditImproved {
                     if (event.text == "z" && event.modifiers.control) {
                         if (event.modifiers.shift) {
                             debug("REDO");
+                            redo();
                         } else {
                             debug("undo");
+                            undo();
                         }
                     }
                     accept
@@ -72,7 +79,7 @@ export component TextEditImproved {
                     wrap: word-wrap;
 
                     edited => {
-                        root.edited(self.text);
+                        root.edited(self.text, cx, cy);
                     }
 
                     cursor-position-changed(cpos) => {
@@ -87,6 +94,9 @@ export component TextEditImproved {
                             // FIXME: font-height hardcoded to 20px
                             root.viewport-y = min(0px, max(root.visible-height - self.height,  root.visible-height - cpos.y - 12px - 20px));
                         }
+
+                        cx = cpos.x;
+                        cy = cpos.y;
                     }
                 }
             }

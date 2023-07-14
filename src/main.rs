@@ -1,19 +1,31 @@
 use slint::{Model, ModelRc, SharedString};
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
 use crate::highlight::highlight;
 
 mod highlight;
 
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
+struct HistoryState {
+    text: String,
+    cursor: (f32, f32),
+}
+
 slint::include_modules!();
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen::prelude::wasm_bindgen(start))]
 fn main() {
+    let initial_code = "bass = Sample > 10 | Sin(0.5 * t) | Sin(0.5 * t) | Sin(0.5 * t) !\n\nmain = bass + (bass < .2s) + Sin(2t << f)";
+
+    let history = Rc::new(RefCell::new(vec![HistoryState {
+        text: initial_code.into(),
+        cursor: (0., 0.),
+    }]));
+
     let main_window = HelloWorld::new().unwrap();
 
-    main_window
-        .set_text("bass = Sample > 10 | Sin(0.5 * t) | Sin(0.5 * t) | Sin(0.5 * t) !\n\nmain = bass + (bass < .2s) + Sin(2t << f)".into());
+    main_window.set_text(initial_code.into());
 
-    let highlight_tokens = highlight("bass = Sample > 10 | Sin(0.5 * t) | Sin(0.5 * t) | Sin(0.5 * t) !\n\nmain = bass + (bass < .2s) + Sin(2t << f)");
+    let highlight_tokens = highlight(initial_code);
     let highlight_tokens = ModelRc::new(slint::VecModel::from(highlight_tokens));
 
     let main_window_weak_1 = main_window.as_weak();
@@ -22,15 +34,43 @@ fn main() {
         .unwrap()
         .set_highlight_tokens(highlight_tokens);
 
-    main_window.on_edited(move |str: SharedString| {
-        println!("Edited! {:?}", str);
+    // main_window.on_cursor_position_changed(move |x: f32, y: f32| {
+    //     println!("New cursor position {}, {}", x, y);
+    // });
 
-        let highlight_tokens = highlight(&str);
+    let history_1 = history.clone();
+    main_window.on_edited(move |code: SharedString, x: f32, y: f32| {
+        println!("Edited! {}, {}", x, y);
+
+        let highlight_tokens = highlight(&code);
         let highlight_tokens = ModelRc::new(slint::VecModel::from(highlight_tokens));
 
         main_window_weak_1
             .unwrap()
             .set_highlight_tokens(highlight_tokens);
+
+        let mut h = history_1.borrow_mut();
+        h.push(HistoryState {
+            text: code.clone().into(),
+            cursor: (x, y),
+        });
+        println!("pushed state, now: {}", h.len());
+    });
+
+    let history_2 = history.clone();
+    let main_window_weak_3 = main_window.as_weak();
+    main_window.on_undo(move || {
+        let mut h = history_2.borrow_mut();
+        h.pop();
+        if let Some(prev) = h.pop() {
+            main_window_weak_3
+                .unwrap()
+                .set_text(prev.text.clone().into());
+
+            // and re-highlight!
+
+            h.push(prev);
+        }
     });
 
     // Fetch the tiles from the model

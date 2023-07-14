@@ -1,3 +1,7 @@
+use slint_build::*;
+
 fn main() {
-    slint_build::compile("src/memory.slint").unwrap();
+    let config = CompilerConfiguration::new().with_style("fluent".into());
+
+    compile_with_config("src/memory.slint", config).unwrap();
 }

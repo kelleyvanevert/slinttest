@@ -21,7 +21,9 @@ export component HelloWorld inherits Window {
 
     in-out property <string> text <=> i-editor.text;
     in property <[HighlightToken]> highlight_tokens <=> i-editor.highlight_tokens;
-    callback edited(string);
+    callback edited(string, length, length);
+    callback undo();
+    callback redo();
 
     callback check_if_pair_solved();
     in property <bool> disable_tiles;
@@ -60,8 +62,15 @@ export component HelloWorld inherits Window {
         height: parent.height;
         wrap: no-wrap;
 
-        edited => {
-            root.edited(self.text);
+        edited(text, cx, cy) => {
+            root.edited(text, cx, cy);
+        }
+
+        undo() => {
+            root.undo();
+        }
+        redo() => {
+            root.redo();
         }
     }
 }
