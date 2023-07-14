@@ -1,38 +1,28 @@
-// Copyright © SixtyFPS GmbH <info@slint.dev>
-// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-1.1 OR LicenseRef-Slint-commercial
-
 import { Typography, Palette } from "styling.slint";
 import { ScrollView } from "scrollview.slint";
 
-export struct HighlightToken {
+export struct HighlightedToken {
     text: string,
     x: int,
     y: int,
 }
 
 export component TextEditImproved {
-    callback edited(string, length, length);
-    callback undo();
-    callback redo();
+    callback edited(string);
 
-    out property <length> cx: 0;
-    out property <length> cy: 0;
-
-    in property <TextWrap> wrap <=> i-text-input.wrap;
     in property <TextHorizontalAlignment> horizontal-alignment <=> i-text-input.horizontal-alignment;
     in property <bool> read-only <=> i-text-input.read-only;
-    in property <length> font-size <=> i-text-input.font-size;
     in property <bool> enabled <=> i-text-input.enabled;
-    in-out property <bool> has-focus: i-text-input.has-focus;
-    out property <length> visible-width <=> i-scroll-view.visible-width;
-    out property <length> visible-height <=> i-scroll-view.visible-height;
+    property <bool> has-focus: i-text-input.has-focus;
+    property <length> visible-width <=> i-scroll-view.visible-width;
+    property <length> visible-height <=> i-scroll-view.visible-height;
     in-out property <string> text <=> i-text-input.text;
-    in-out property <length> viewport-x <=> i-scroll-view.viewport-x;
-    in-out property <length> viewport-y <=> i-scroll-view.viewport-y;
-    in-out property <length> viewport-width <=> i-scroll-view.viewport-width;
-    in-out property <length> viewport-height <=> i-scroll-view.viewport-height;
+    property <length> viewport-x <=> i-scroll-view.viewport-x;
+    property <length> viewport-y <=> i-scroll-view.viewport-y;
+    property <length> viewport-width <=> i-scroll-view.viewport-width;
+    property <length> viewport-height <=> i-scroll-view.viewport-height;
 
-    in property <[HighlightToken]> highlight_tokens: [];
+    in property <[HighlightedToken]> highlight_tokens: [];
 
     forward-focus: i-text-input;
     horizontal-stretch: 1;
@@ -51,35 +41,35 @@ export component TextEditImproved {
             y: 12px;
             width: parent.width - 24px;
             height: parent.height - 24px;
-            viewport-width: root.wrap == TextWrap.word-wrap ? self.visible-width : max(self.visible-width, i-text-input.preferred-width);
+            viewport-width: max(self.visible-width, i-text-input.preferred-width);
             viewport-height: max(self.visible-height, i-text-input.preferred-height);
 
             FocusScope {
-                key-pressed(event) => {
-                    if (event.text == "z" && event.modifiers.control) {
-                        if (event.modifiers.shift) {
-                            debug("REDO");
-                            redo();
-                        } else {
-                            debug("undo");
-                            undo();
-                        }
-                    }
-                    accept
-                }
+                forward-focus: i-text-input;
+
+                // key-pressed(event) => {
+                //     if (event.text == "z" && event.modifiers.control) {
+                //         if (event.modifiers.shift) {
+                //             debug("REDO");
+                //         } else {
+                //             debug("undo");
+                //         }
+                //     }
+                //     accept
+                // }
 
                 i-text-input := TextInput {
                     enabled: true;
                     color: #555;
-                    font-size: Typography.body.font-size;
+                    font-size: 16px;
                     font-weight: Typography.body.font-weight;
                     selection-background-color: #E9E8F2;
                     selection-foreground-color: self.color;
                     single-line: false;
-                    wrap: word-wrap;
+                    wrap: no-wrap;
 
                     edited => {
-                        root.edited(self.text, cx, cy);
+                        root.edited(self.text);
                     }
 
                     cursor-position-changed(cpos) => {
@@ -94,27 +84,18 @@ export component TextEditImproved {
                             // FIXME: font-height hardcoded to 20px
                             root.viewport-y = min(0px, max(root.visible-height - self.height,  root.visible-height - cpos.y - 12px - 20px));
                         }
-
-                        cx = cpos.x;
-                        cy = cpos.y;
                     }
                 }
             }
 
             for token[i] in highlight_tokens : Text {
-                x: token.x * 8.61px;
-                y: token.y * 17px;
-                font-weight: 700;
+                x: token.x * 9.848px;
+                y: token.y * 19.51px;
+                font-size: 16px;
+                font-weight: 600;
                 text: token.text;
                 color: #3021E5;
             }
-        }
-
-        i-focus-border := Rectangle {
-            x: parent.border-radius;
-            y: parent.height - self.height;
-            width: parent.width - 2 * parent.border-radius;
-            height: 2px;
         }
     }
 
@@ -147,7 +128,6 @@ export component TextEditImproved {
         focused when root.has-focus : {
             i-background.background: Palette.control-input-active;
             i-background.border-color: Palette.control-stroke;
-            i-focus-border.background: Palette.accent-default;
         }
     ]
 }

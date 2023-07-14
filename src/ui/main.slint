@@ -1,0 +1,34 @@
+import { TextEdit } from "std-widgets.slint";
+import { TextEditImproved, HighlightedToken } from "./textedit-improved.slint";
+import "./fonts/FiraCode-Regular.ttf";
+import "./fonts/FiraCode-Medium.ttf";
+import "./fonts/FiraCode-SemiBold.ttf";
+import "./fonts/FiraCode-Bold.ttf";
+
+export struct TileData {
+    image: image,
+    image_visible: bool,
+    solved: bool,
+}
+
+export component MainWindow inherits Window {
+    title: "Kelley's happy live-coding synth";
+    default-font-family: "Fira Code";
+    default-font-weight: 500;
+    default-font-size: 14px;
+    width: 660px;
+    height: 440px;
+
+    in-out property <string> text <=> i-editor.text;
+    in property <[HighlightedToken]> highlight_tokens <=> i-editor.highlight_tokens;
+    callback edited(string);
+
+    i-editor := TextEditImproved {
+        width: parent.width;
+        height: parent.height;
+
+        edited(text) => {
+            root.edited(text);
+        }
+    }
+}

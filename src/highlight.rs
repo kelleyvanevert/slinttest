@@ -1,11 +1,11 @@
 use synoptic::{Highlighter, Token};
 
-use crate::HighlightToken;
+use crate::HighlightedToken;
 
-pub fn highlight(code: &str) -> Vec<HighlightToken> {
+pub fn highlight(code: &str) -> Vec<HighlightedToken> {
     let mut syntax = Highlighter::new();
     // Add keywords
-    syntax.join(&["Sample", "Sin"], "keyword").unwrap();
+    syntax.join(&["Sample", "Sin", "Midi"], "keyword").unwrap();
     // syntax.join(&["bool"], "type").unwrap();
     // syntax.join(&["true", "false"], "boolean").unwrap();
     // // Add comment definitions
@@ -21,7 +21,7 @@ pub fn highlight(code: &str) -> Vec<HighlightToken> {
 
     let tokens = syntax.run(code);
 
-    let mut highlight_tokens: Vec<HighlightToken> = vec![];
+    let mut highlight_tokens: Vec<HighlightedToken> = vec![];
 
     for (y, row) in tokens.iter().enumerate() {
         let mut x: usize = 0;
@@ -37,7 +37,7 @@ pub fn highlight(code: &str) -> Vec<HighlightToken> {
                 // Handle a text token (print out the contents)
                 Token::Text(text) => {
                     if is_keyword {
-                        highlight_tokens.push(HighlightToken {
+                        highlight_tokens.push(HighlightedToken {
                             text: text.into(),
                             x: x as i32,
                             y: y as i32,
@@ -54,32 +54,32 @@ pub fn highlight(code: &str) -> Vec<HighlightToken> {
     }
 
     // vec![
-    //     HighlightToken {
+    //     HighlightedToken {
     //         text: "bass".into(),
     //         x: 0,
     //         y: 0,
     //     },
-    //     HighlightToken {
+    //     HighlightedToken {
     //         text: "Sin".into(),
     //         x: 21,
     //         y: 0,
     //     },
-    //     HighlightToken {
+    //     HighlightedToken {
     //         text: "Sin".into(),
     //         x: 36,
     //         y: 0,
     //     },
-    //     HighlightToken {
+    //     HighlightedToken {
     //         text: "Sin".into(),
     //         x: 51,
     //         y: 0,
     //     },
-    //     HighlightToken {
+    //     HighlightedToken {
     //         text: "bass".into(),
     //         x: 7,
     //         y: 2,
     //     },
-    //     HighlightToken {
+    //     HighlightedToken {
     //         text: "bass".into(),
     //         x: 15,
     //         y: 2,
