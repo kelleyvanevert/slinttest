@@ -1,9 +1,37 @@
-use slint::Model;
+use slint::{Model, ModelRc, SharedString};
+use std::rc::Rc;
+
+use crate::highlight::highlight;
+
+mod highlight;
 
 slint::include_modules!();
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen::prelude::wasm_bindgen(start))]
 fn main() {
     let main_window = HelloWorld::new().unwrap();
+
+    main_window
+        .set_text("bass = Sample > 10 | Sin(0.5 * t) | Sin(0.5 * t) | Sin(0.5 * t) !\n\nmain = bass + (bass < .2s) + Sin(2t << f)".into());
+
+    let highlight_tokens = highlight("bass = Sample > 10 | Sin(0.5 * t) | Sin(0.5 * t) | Sin(0.5 * t) !\n\nmain = bass + (bass < .2s) + Sin(2t << f)");
+    let highlight_tokens = ModelRc::new(slint::VecModel::from(highlight_tokens));
+
+    let main_window_weak_1 = main_window.as_weak();
+
+    main_window_weak_1
+        .unwrap()
+        .set_highlight_tokens(highlight_tokens);
+
+    main_window.on_edited(move |str: SharedString| {
+        println!("Edited! {:?}", str);
+
+        let highlight_tokens = highlight(&str);
+        let highlight_tokens = ModelRc::new(slint::VecModel::from(highlight_tokens));
+
+        main_window_weak_1
+            .unwrap()
+            .set_highlight_tokens(highlight_tokens);
+    });
 
     // Fetch the tiles from the model
     let mut tiles: Vec<TileData> = main_window.get_memory_tiles().iter().collect();
@@ -16,7 +44,7 @@ fn main() {
     tiles.shuffle(&mut rng);
 
     // Assign the shuffled Vec to the model property
-    let tiles_model = std::rc::Rc::new(slint::VecModel::from(tiles));
+    let tiles_model = Rc::new(slint::VecModel::from(tiles));
     main_window.set_memory_tiles(tiles_model.clone().into());
 
     let main_window_weak = main_window.as_weak();
